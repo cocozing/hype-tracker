@@ -90,7 +90,7 @@
         const tokenId = "hyperliquid"; // Remplacez par le token que vous souhaitez suivre
 
         function fetchTokenData() {
-            fetch(`https://api.coingecko.com/api/v3/coins/${tokenId}`)
+            fetch(`https://api.coingecko.com/api/v3/coins/hyperliquid)
                 .then(response => response.json())
                 .then(data => {
                     const price = data.market_data.current_price.usd;
