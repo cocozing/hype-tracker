@@ -33,32 +33,34 @@
     </style>
 </head>
 <body>
-    <img src="" alt="Token Logo" class="logo">
-    <div class="loading">Loading...</div>
-    <div class="price"></div>
-    <div class="marketcap"></div>
+    <img src="" alt="Token Logo" class="logo" id="tokenLogo">
+    <div class="loading" id="loadingText">Loading...</div>
+    <div class="price" id="tokenPrice"></div>
+    <div class="marketcap" id="marketCap"></div>
 
     <script>
         async function fetchTokenData() {
-            const url = 'https://api.coingecko.com/api/v3/coins/hype';
+            const url = 'https://api.coingecko.com/api/v3/coins/hyperliquid'; // 
 
             try {
                 const response = await fetch(url);
                 const data = await response.json();
 
                 // Mise à jour des informations
-                document.querySelector('.logo').src = data.image.thumb;
-                document.querySelector('.loading').textContent = '';
-                document.querySelector('.price').textContent = `Price: $${data.market_data.current_price.usd}`;
-                document.querySelector('.marketcap').textContent = `Market Cap: $${data.market_data.market_cap.usd.toLocaleString()}`;
+                document.getElementById('tokenLogo').src = data.image.thumb;
+                document.getElementById('loadingText').textContent = ''; // Retirer le texte de chargement
+                document.getElementById('tokenPrice').textContent = `Price: $${data.market_data.current_price.usd}`;
+                document.getElementById('marketCap').textContent = `Market Cap: $${data.market_data.market_cap.usd.toLocaleString()}`;
             } catch (error) {
-                document.querySelector('.loading').textContent = 'Error fetching data';
+                document.getElementById('loadingText').textContent = 'Error fetching data';
                 console.error(error);
             }
         }
 
-        // Initial fetch and update every 30 seconds
+        // Initial fetch
         fetchTokenData();
+
+        // Mise à jour des données toutes les 30 secondes
         setInterval(fetchTokenData, 30000);
     </script>
 </body>
