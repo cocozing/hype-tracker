@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HYPER Token Tracker</title>
+    <title>HYPE Token Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             margin: 0;
@@ -16,6 +17,7 @@
             color: #FFFFFF;
             font-family: Arial, sans-serif;
             text-align: center;
+            padding: 10px;
         }
         .logo {
             width: 100px;
@@ -30,36 +32,90 @@
             font-size: 1.2rem;
             color: #AAAAAA;
         }
+        canvas {
+            width: 100% !important;
+            height: 250px;
+            max-width: 400px;
+        }
     </style>
 </head>
 <body>
-    <img src="" alt="Token Logo" class="logo">
+    <img src="" alt="HYPE Logo" class="logo">
     <div class="loading">Loading...</div>
-    <div class="price"></div>
-    <div class="marketcap"></div>
+    <div class="price">Price: $0.00</div>
+    <div class="marketcap">Market Cap: $0.00</div>
+
+    <canvas id="priceChart"></canvas>
 
     <script>
-        async function fetchTokenData() {
-            const url = 'https://api.coingecko.com/api/v3/coins/hyperliquid';
+        let priceData = [];
+        let timeData = [];
 
+        const url = 'https://api.coingecko.com/api/v3/coins/hyperliquid';
+
+        const ctx = document.getElementById('priceChart').getContext('2d');
+        const priceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timeData,
+                datasets: [{
+                    label: 'Price (USD)',
+                    data: priceData,
+                    borderColor: '#FF5733',
+                    backgroundColor: 'rgba(255, 87, 51, 0.2)',
+                    fill: true,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom'
+                    },
+                    y: {
+                        beginAtZero: false
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        async function fetchTokenData() {
             try {
                 const response = await fetch(url);
                 const data = await response.json();
-
-                // Mise à jour des informations
+                
+                // Mettre à jour les informations du logo
                 document.querySelector('.logo').src = data.image.thumb;
-                document.querySelector('.loading').textContent = '';
+                
+                // Mettre à jour la capitalisation et le prix
                 document.querySelector('.price').textContent = `Price: $${data.market_data.current_price.usd}`;
                 document.querySelector('.marketcap').textContent = `Market Cap: $${data.market_data.market_cap.usd.toLocaleString()}`;
+                
+                // Ajouter les données du graphique
+                const currentTime = new Date().toLocaleTimeString();
+                priceData.push(data.market_data.current_price.usd);
+                timeData.push(currentTime);
+                
+                // Limiter le nombre de points sur le graphique à 50
+                if (priceData.length > 50) {
+                    priceData.shift();
+                    timeData.shift();
+                }
+
+                // Mettre à jour le graphique
+                priceChart.update();
             } catch (error) {
+                console.error('Error fetching data:', error);
                 document.querySelector('.loading').textContent = 'Error fetching data';
-                console.error(error);
             }
         }
 
         // Initial fetch and update every 1 second
         fetchTokenData();
-        setInterval(fetchTokenData, 1000);
+        setInterval(fetchTokenData, 1000); // Actualisation toutes les secondes
     </script>
 </body>
 </html>
