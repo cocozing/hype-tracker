@@ -1,130 +1,115 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HYPE Token Tracker</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Tracker HYPE Token</title>
     <style>
-        body {
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #2c3e50;
+            color: white;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background: #1E1E2F;
-            color: #FFFFFF;
-            font-family: Arial, sans-serif;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #34495e;
+            border-radius: 10px;
+            padding: 20px;
+            width: 400px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             text-align: center;
         }
-        .logo {
-            width: 100px;
-            height: 100px;
+
+        .header {
             margin-bottom: 20px;
         }
-        .price, .marketcap {
-            font-size: 1.5rem;
-            margin: 10px 0;
+
+        .header img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 10px;
         }
-        .loading {
-            font-size: 1.2rem;
-            color: #AAAAAA;
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
         }
-        .chart-container {
-            width: 80%;
-            height: 400px;
-            margin-top: 20px;
+
+        .header p {
+            font-size: 18px;
+            margin: 5px 0;
         }
-        canvas {
-            width: 100%;
-            height: 100%;
+
+        .header span {
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .price {
+            color: #1abc9c;
+        }
+
+        .mcap {
+            color: #f39c12;
+        }
+
+        /* Add transition effect */
+        .header p {
+            transition: color 0.3s ease;
+        }
+
+        /* Animate price updates */
+        .price-update {
+            transition: color 0.3s ease;
         }
     </style>
 </head>
 <body>
-    <img src="" alt="Token Logo" class="logo">
-    <div class="loading">Loading...</div>
-    <div class="price"></div>
-    <div class="marketcap"></div>
-
-    <div class="chart-container">
-        <canvas id="priceChart"></canvas>
+    <div class="container">
+        <div class="header">
+            <img id="logo" src="https://crypto.com/logo.png" alt="HYPE Logo" />
+            <h1>HYPE Token</h1>
+            <p>Prix actuel : <span id="price" class="price">Chargement...</span></p>
+            <p>Market Cap : <span id="mcap" class="mcap">Chargement...</span></p>
+        </div>
     </div>
 
     <script>
-        const ctx = document.getElementById('priceChart').getContext('2d');
-        const priceData = {
-            labels: [],
-            datasets: [{
-                label: 'Price of HYPE Token',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                data: [],
-                fill: true,
-                tension: 0.4,
-            }]
-        };
-        
-        const config = {
-            type: 'line',
-            data: priceData,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        type: 'linear',
-                        position: 'bottom'
-                    },
-                    y: {
-                        beginAtZero: false
-                    }
-                },
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            }
-        };
+        const tokenId = "hyperliquid"; // Remplacez par le token que vous souhaitez suivre
 
-        const priceChart = new Chart(ctx, config);
+        function fetchTokenData() {
+            fetch(`https://api.coingecko.com/api/v3/coins/${tokenId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const price = data.market_data.current_price.usd;
+                    const mcap = data.market_data.market_cap.usd;
 
-        async function fetchTokenData() {
-            const url = 'https://api.coingecko.com/api/v3/coins/hyperliquid';
-
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-
-                // Mise à jour des informations
-                document.querySelector('.logo').src = data.image.thumb;
-                document.querySelector('.loading').textContent = '';
-                document.querySelector('.price').textContent = `Price: $${data.market_data.current_price.usd}`;
-                document.querySelector('.marketcap').textContent = `Market Cap: $${data.market_data.market_cap.usd.toLocaleString()}`;
-
-                // Mise à jour du graphique
-                const currentTime = new Date().toLocaleTimeString();
-                priceData.labels.push(currentTime);
-                priceData.datasets[0].data.push(data.market_data.current_price.usd);
-
-                // Limiter à 30 points de données (enlève les points les plus anciens)
-                if (priceData.labels.length > 30) {
-                    priceData.labels.shift();
-                    priceData.datasets[0].data.shift();
-                }
-
-                priceChart.update();
-            } catch (error) {
-                document.querySelector('.loading').textContent = 'Error fetching data';
-                console.error(error);
-            }
+                    // Mise à jour des informations sur la page
+                    document.getElementById('price').textContent = `$${price.toFixed(2)}`;
+                    document.getElementById('mcap').textContent = `$${mcap.toLocaleString()}`;
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la récupération des données :', error);
+                });
         }
 
-        // Initial fetch and update every second
-        fetchTokenData();
+        // Rafraîchissement des données toutes les secondes
         setInterval(fetchTokenData, 1000);
+
+        // Charger les données dès le chargement de la page
+        fetchTokenData();
     </script>
 </body>
 </html>
