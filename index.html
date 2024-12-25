@@ -17,7 +17,6 @@
             color: #FFFFFF;
             font-family: Arial, sans-serif;
             text-align: center;
-            padding: 10px;
         }
         .logo {
             width: 100px;
@@ -32,42 +31,47 @@
             font-size: 1.2rem;
             color: #AAAAAA;
         }
+        .chart-container {
+            width: 80%;
+            height: 400px;
+            margin-top: 20px;
+        }
         canvas {
-            width: 100% !important;
-            height: 250px;
-            max-width: 400px;
+            width: 100%;
+            height: 100%;
         }
     </style>
 </head>
 <body>
-    <img src="" alt="HYPE Logo" class="logo">
+    <img src="" alt="Token Logo" class="logo">
     <div class="loading">Loading...</div>
-    <div class="price">Price: $0.00</div>
-    <div class="marketcap">Market Cap: $0.00</div>
+    <div class="price"></div>
+    <div class="marketcap"></div>
 
-    <canvas id="priceChart"></canvas>
+    <div class="chart-container">
+        <canvas id="priceChart"></canvas>
+    </div>
 
     <script>
-        let priceData = [];
-        let timeData = [];
-
-        const url = 'https://api.coingecko.com/api/v3/coins/hyperliquid';
-
         const ctx = document.getElementById('priceChart').getContext('2d');
-        const priceChart = new Chart(ctx, {
+        const priceData = {
+            labels: [],
+            datasets: [{
+                label: 'Price of HYPE Token',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                data: [],
+                fill: true,
+                tension: 0.4,
+            }]
+        };
+        
+        const config = {
             type: 'line',
-            data: {
-                labels: timeData,
-                datasets: [{
-                    label: 'Price (USD)',
-                    data: priceData,
-                    borderColor: '#FF5733',
-                    backgroundColor: 'rgba(255, 87, 51, 0.2)',
-                    fill: true,
-                    borderWidth: 2
-                }]
-            },
+            data: priceData,
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     x: {
                         type: 'linear',
@@ -77,45 +81,50 @@
                         beginAtZero: false
                     }
                 },
-                responsive: true,
-                maintainAspectRatio: false
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
             }
-        });
+        };
+
+        const priceChart = new Chart(ctx, config);
 
         async function fetchTokenData() {
+            const url = 'https://api.coingecko.com/api/v3/coins/hyperliquid';
+
             try {
                 const response = await fetch(url);
                 const data = await response.json();
-                
-                // Mettre à jour les informations du logo
+
+                // Mise à jour des informations
                 document.querySelector('.logo').src = data.image.thumb;
-                
-                // Mettre à jour la capitalisation et le prix
+                document.querySelector('.loading').textContent = '';
                 document.querySelector('.price').textContent = `Price: $${data.market_data.current_price.usd}`;
                 document.querySelector('.marketcap').textContent = `Market Cap: $${data.market_data.market_cap.usd.toLocaleString()}`;
-                
-                // Ajouter les données du graphique
+
+                // Mise à jour du graphique
                 const currentTime = new Date().toLocaleTimeString();
-                priceData.push(data.market_data.current_price.usd);
-                timeData.push(currentTime);
-                
-                // Limiter le nombre de points sur le graphique à 50
-                if (priceData.length > 50) {
-                    priceData.shift();
-                    timeData.shift();
+                priceData.labels.push(currentTime);
+                priceData.datasets[0].data.push(data.market_data.current_price.usd);
+
+                // Limiter à 30 points de données (enlève les points les plus anciens)
+                if (priceData.labels.length > 30) {
+                    priceData.labels.shift();
+                    priceData.datasets[0].data.shift();
                 }
 
-                // Mettre à jour le graphique
                 priceChart.update();
             } catch (error) {
-                console.error('Error fetching data:', error);
                 document.querySelector('.loading').textContent = 'Error fetching data';
+                console.error(error);
             }
         }
 
-        // Initial fetch and update every 1 second
+        // Initial fetch and update every second
         fetchTokenData();
-        setInterval(fetchTokenData, 1000); // Actualisation toutes les secondes
+        setInterval(fetchTokenData, 1000);
     </script>
 </body>
 </html>
